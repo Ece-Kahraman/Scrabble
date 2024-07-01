@@ -1,0 +1,33 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>{{ request.user.username }}</title>
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+    </head>
+    <body>
+        <h1>HELLO</h1>
+        {% if user.is_authenticated %}
+            <div class="container-fluid" style="display: inline-flex; flex-direction: column; justify-content: center">
+                <h2>Hello, {{ request.user.username }}</h2>
+                <div class="btn-group-vertical">
+                    <button type="button" class="btn btn-outline-primary"><a href="{% url 'boards:find' %}">oda bul</a></button>
+                    <button type="button" class="btn btn-outline-secondary">ai vs at</button>
+                    <button type="button" class="btn btn-outline-danger"><a href="{% url 'signout' %}">GİT BURDAN</a></button>
+                </div>
+
+            </div>
+        {% else %}
+            <div class="container-fluid" style="display: flex; justify-content: center; flex-direction: column">
+                <h2>SIGNED OUT</h2>
+                <div class="btn-group-vertical">
+                    <button type="button" class="btn btn-outline-info"><a href="{% url 'signup' %}">SIGN UP</a></button>
+                    <button type="button" class="btn btn-outline-success"><a href="{% url 'signin' %}">SIGN IN</a></button>
+                </div>
+            </div>
+        {% endif %}
+    </body>
+</html>

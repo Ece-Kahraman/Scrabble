@@ -1,0 +1,43 @@
+<!DOCTYPE>
+<html>
+
+<head>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <title>{{ request.user.username }}</title></head>
+<body>
+    {% if not rooms %}
+        <h1>Kimse oyun yapmamış?</h1>
+    {% else %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="container-fluid p-0" id="alert-cont">
+                    <div class="alert alert-danger alert-dismissible " id="alert-div" role="alert" >
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="True"></span>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div style="display: flex; flex-direction: column; justify-content: center">
+        {% for room in rooms %}
+            <div class="container-xl" style="border: 2px solid red; flex-direction: column; align-content: center">
+                <p>Room ID: {{ room.id }}</p>
+                <p>Player Count: {{ room.player_count }}/2</p>
+                <a href={% url 'boards:game' room.id %}>Enter</a>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    <form action="{% url 'boards:create_room'%}" method="POST">
+    {% csrf_token %}
+    <button type="submit" style="margin-top: 20px">Create a new Room</button>
+    </form>
+    <button type="button" style="margin-top: 20px"><a href="{% url 'index' %}">Back to Home</a></button>
+</body>
+</html>

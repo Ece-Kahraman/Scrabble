@@ -1,0 +1,257 @@
+<script>
+    let letterLocations = []
+    let fullLocations = []
+    let existingLetters = []
+    let consumerFlag = false
+    let eventData
+    let letter_map = {}
+    let available_letters = []
+    let request_user = "{{ request.user.username }}"
+
+    const boardSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/game/'
+        + '{{ room }}'
+        + '/'
+    );
+
+    boardSocket.onopen = function (event) {
+        console.log("connection is open")
+    }
+
+    boardSocket.onmessage = function (event) {
+        eventData = JSON.parse(event.data)
+        console.log(eventData.type)
+        // console.log(eventData.data)
+        // console.log(letterLocations)
+
+        if (eventData.type === "success") {
+            console.log(eventData.data['turn'])
+            let word = eventData.data['word']
+            let locations = eventData.data['locations']
+            document.getElementById("whos_turn").innerText = eventData.data['turn'] + "'s turn!"
+            for(let i = 0; i < locations.length; i++){
+                document.getElementById(locations[i]).innerText = word[i].toUpperCase()
+                document.getElementById(locations[i]).style.backgroundColor = "transparent"
+                document.getElementById(locations[i]).disabled = false
+
+            }
+            if (eventData.data['user'] === {{ request.user.id }}){
+                document.getElementById("own-score").innerText = "Your score: " + eventData.data['score']
+                document.getElementById("own-letters").innerText = eventData.data['new_tiles']
+                available_letters = document.getElementById("their-letters").innerText
+            } else {
+                document.getElementById("their-score").innerText = "Opponent's score: " + eventData.data['score']
+                // document.getElementById("their-letters").innerText = eventData.data['new_tiles']
+                available_letters = document.getElementById("own-letters").innerText
+            }
+
+            let new_words_list = document.getElementById("words-made");
+                for (let i = 0; i < eventData.data['new_words'].length; ++i) {
+                    let li = document.createElement('li');
+                    li.innerText = eventData.data['new_words'][i];
+                    new_words_list.appendChild(li);
+                }
+
+            letter_map = {}
+            array_to_hash(letter_map, available_letters)
+
+        } else if (eventData.type === "fail") {
+            const alert_div = document.getElementById("alert-div")
+            const wrapper = document.createElement('div')
+                wrapper.innerHTML = [
+                    `<div class="alert alert-danger alert-dismissible" role="alert">`,
+                    `   <div>${eventData.message}</div>`,
+                    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                    '</div>'
+                ].join('')
+            alert_div.append(wrapper)
+
+
+        } else if ( eventData.type === "joined") {
+            const alert_div = document.getElementById("alert-div")
+            const wrapper = document.createElement('div')
+                wrapper.innerHTML = [
+                    `<div class="alert alert-success alert-dismissible" role="alert">`,
+                    `   <div>${eventData.data['user']} joined the game!</div>`,
+                    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                    '</div>'
+                ].join('')
+            alert_div.append(wrapper)
+
+            if ("{{ turn }}" === "{{ request.user.username }}"){
+                available_letters = eventData.data['own-hand']
+            } else {
+                available_letters = eventData.data['their-hand']
+            }
+
+            letter_map = {}
+            array_to_hash(letter_map, available_letters)
+
+        }
+
+        onCancelButtonClick()
+    }
+
+    function onEnterButtonClick(){
+        document.getElementById('textInput').style.display = "block";
+        document.getElementById('textInput').maxLength = letterLocations.length;
+        document.getElementById('textInput').minLength = letterLocations.length;
+        document.getElementById("submit_word").style.display = "block";
+        document.getElementById("cancel_input").style.display = "block";
+    }
+
+    function onCancelButtonClick(){
+        for( let i = 0; i < letterLocations.length; i++){
+            document.getElementById(letterLocations[i]).style.backgroundColor = "transparent";
+            document.getElementById(letterLocations[i]).disabled = false
+        }
+        letterLocations = []
+        fullLocations = []
+        existingLetters = []
+        letter_map = {}
+        array_to_hash(letter_map, available_letters)
+        entered_letter_counter = 0
+        document.getElementById('textInput').style.display = "none";
+        document.getElementById("textInput").value = "";
+        document.getElementById("submit_word").style.display = "none";
+        document.getElementById("cancel_input").style.display = "none";
+        document.getElementById("enter_word").style.display = "none";
+
+    }
+
+    function onSubmitButtonClick(){
+        entered_letter_counter = 0
+        letter_map = {}
+        boardSocket.send(JSON.stringify({
+            'word': document.getElementById('textInput').value,
+            'locations': letterLocations,
+            'full_locations': fullLocations,
+            'existing_letters': existingLetters
+        }));
+        document.getElementById("textInput").value = ""
+    }
+
+    function handleOnClick(position_id){
+        document.getElementById(position_id).style.backgroundColor = "pink"
+        document.getElementById(position_id).disabled = true
+        letterLocations.push(position_id)
+        console.log(letterLocations)
+        let letter = document.getElementById(position_id).innerText
+        if( letter !== "*" ){
+            fullLocations.push(position_id)
+            existingLetters.push(document.getElementById(position_id).innerText)
+            if( letter in letter_map ){
+                    letter_map[letter]++
+                } else {
+                    letter_map[letter] = 1
+                }
+            console.log(fullLocations)
+        }
+        if( letterLocations.length >= 1 ) {
+            document.getElementById("enter_word").style.display = "block";
+        }
+    }
+
+    let entered_letter_counter = 0
+
+    document.addEventListener('keydown', event => {
+        console.log(event.key);
+
+        console.log(letter_map)
+
+        if (event.key !== "Backspace") {
+            console.log(event.key.toUpperCase() in letter_map)
+            console.log(letter_map[event.key.toUpperCase()])
+            if ( !(event.key.toUpperCase() in letter_map) || (letter_map[event.key.toUpperCase()] <= 0) ) {
+                console.log("if")
+                event.preventDefault();
+                return false;
+
+            } else {
+                if ( entered_letter_counter < letterLocations.length){
+                    letter_map[event.key.toUpperCase()]--
+                    entered_letter_counter++
+                    console.log(letter_map)
+                    console.log(entered_letter_counter)
+                }
+
+            }
+        }
+
+    });
+
+    function array_to_hash(hash, array) {
+        for(let i = 0; i < array.length; i++){
+                if( !array[i].match(/[a-z]/i) ){
+                    continue
+                }
+                if( array[i] in hash ){
+                    hash[array[i]]++
+                } else {
+                    hash[array[i]] = 1
+                }
+            }
+    }
+
+</script>
+
+
+<!DOCTYPE>
+<html lang="en">
+<head>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <title>{{ request.user.username }}</title>
+
+</head>
+
+<body>
+    <h1>Board for room {{ room }}</h1>
+    <form action="{% url 'boards:create_board' room%}" method="POST">
+    {% csrf_token %}
+    <button type="submit">Create a new board</button>
+    </form>
+
+    <div id="alert-div"></div>
+
+    <div style="display: flex">
+        <table style="margin-left: 30px">
+            {% for row in board %}
+                <tr>
+                    {% for cell in row %}
+                        <td><fieldset style="text-align: center; width: 35px; height: 35px; border: 1px solid black;" id="{{ forloop.parentloop.counter }}/{{ forloop.counter }}" onclick="handleOnClick(id)">
+                            {{ cell }}
+                        </fieldset></td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+        <div style="padding-left: 58px">
+            <h2 id="whos_turn">{{ turn }}'s turn</h2>
+            <h3 id="own-score">Your score: {{ own_score }}</h3>
+            <div>
+                <h3>Your Letters</h3>
+                <fieldset id="own-letters" style="border: 1px solid black;">{{ own_hand }}</fieldset>
+            </div>
+            <br>
+            <h3 id="their-score">Opponent's score: {{ their_score }}</h3>
+            <br>
+            <h3>Words Opponent Made</h3>
+            <ul id="words-made"></ul>
+            <br>
+            <br>
+            <button style="display: none;" id="enter_word" onclick="onEnterButtonClick()">Enter Word</button>
+            <label for="textInput"></label><input style="display: none;" type="text" id="textInput" name="word">
+            <input type="hidden" id="locations" name="locations" value="">
+            <input type="hidden" id="full_locations" name="full_locations" value="">
+            <input type="hidden" id="existing_letters" name="existing_letters" value="">
+            <button style="display: none;" id="submit_word" onclick="onSubmitButtonClick()">Submit</button>
+            <button style="display: none;" id="cancel_input" onclick="onCancelButtonClick()">Restart</button>
+        </div>
+    </div>
+    <button type="button" style="margin-top: 20px"><a href="{% url 'boards:find' %}">Back to Rooms</a></button>
+</body>
+</html>

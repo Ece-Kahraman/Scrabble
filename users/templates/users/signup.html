@@ -1,0 +1,54 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>sign up</title>
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+    </head>
+    <body>
+        <h1>KAYIT YERİ</h1>
+        <form action="/signup" method="POST">
+            {% csrf_token %}
+            <div class="form-group row">
+                <label for="firstname" class="col-sm-2 col-form-label" style="font-family: Arial,serif">First Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="firstname" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="lastname" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Last Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="lastname" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="username" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Username</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="email" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Email</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="password" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Password</label>
+                <div class="col-sm-10">
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+            </div>
+
+            <br/>
+            <button type="submit" class="btn btn-primary">KAYDOL</button>
+        </form>
+    </body>
+</html>

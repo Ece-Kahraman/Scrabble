@@ -1,0 +1,35 @@
+<!DOCTYPE>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>sign in</title>
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+    </head>
+    <body>
+        <h1>GİRİŞ YERİ</h1>
+        <form action="/signin" method="POST">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <label for="username" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Username</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="username">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="password" class="col-sm-2 col-form-label" style="font-family: Arial,serif">Password</label>
+                <div class="col-sm-10">
+                    <input type="password" class="form-control" name="password">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-10">
+                    <br/>
+                    <button type="submit" class="btn btn-primary">Sign in</button>
+                </div>
+            </div>
+        </form>
+    </body>
+</html>
